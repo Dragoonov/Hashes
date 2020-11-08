@@ -53,9 +53,9 @@ class ChainDict(Dict):
     def _find_index(self, key):
         global comparisons_amount_for_element
         h = hash(key) % len(self._data)
-        for i in range(len(self._data[h])):
+        for counter, value in enumerate(self._data[h]):
             comparisons_amount_for_element += 1
-            if self._key(self._data[h][i]) == key:
+            if (self._key(value)) == key:
                 return h, i
         return h, -1
 
@@ -95,8 +95,8 @@ class ChainDict(Dict):
 
 
 class LinearDict(Dict):
-    N = 999
-    D = 1000
+    N = 7
+    D = 10
 
     def __init__(self):
         super().__init__()
@@ -156,14 +156,14 @@ class LinearDict(Dict):
 
     def _new_data(self, new_size):
         r = [LinearDict.Special.EMPTY] * new_size
-        for src_i in range(len(self._data)):
-            if not self._empty(src_i) and not self._deleted(src_i):
-                key = self._key(self._data[src_i])
+        for counter, value in enumerate(self._data):
+            if not self._empty(counter) and not self._deleted(counter):
+                key = self._key(value)
                 i = self._h(key) % len(r)
                 step = 1
                 while r[i] != LinearDict.Special.EMPTY:
                     i = (i + step) % len(r)
-                r[i] = self._data[src_i]
+                r[i] = self._data[counter]
         return r
 
     class Special(Enum):
@@ -179,9 +179,9 @@ lineardata = [[], []]
 rang = 5000
 data = random.sample(range(rang), rang)
 
-for i in range(rang):
-    chainDict.insert(data[i])
-    linearDict.insert(data[i])
+for i, value in enumerate(data):
+    chainDict.insert(value)
+    linearDict.insert(value)
     chainDict.find(-1)
     chaindata[0].append(len(chainDict))
     chaindata[1].append(comparisons_amount_for_element)
