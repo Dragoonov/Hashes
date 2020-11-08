@@ -7,10 +7,9 @@ comparisons_amount_for_element = 0
 
 
 class Dict(ABC):
-    MAX_PER_LIST = 1000
 
     def __init__(self):
-        self._size = 16
+        self._size = 0
         self._data = []
 
     @abstractmethod
@@ -28,6 +27,9 @@ class Dict(ABC):
     def _key(self, element):
         return element
 
+    def _h(self, key):
+        return hash(key) % len(self._data)
+
     def __delitem__(self, key):
         self.delete(key)
 
@@ -42,10 +44,11 @@ class Dict(ABC):
 
 
 class ChainDict(Dict):
+    MAX_PER_LIST = 100
 
     def __init__(self):
         super().__init__()
-        for i in range(self._size):
+        for i in range(16):
             self._data.append([])
 
     def __find_index(self, key):
@@ -95,17 +98,15 @@ class ChainDict(Dict):
 
 
 class LinearDict(Dict):
-    N = 500
-    D = 1000
+    N = 99
+    D = 100
 
     def __init__(self):
         super().__init__()
-        for i in range(self._size):
+        for i in range(16):
             self._data.append(LinearDict.Special.EMPTY)
 
     def __empty(self, i):
-        global comparisons_amount_for_element
-        comparisons_amount_for_element += 1
         return self._data[i] == LinearDict.Special.EMPTY
 
     def __deleted(self, i):
@@ -113,25 +114,20 @@ class LinearDict(Dict):
 
     def __scan_for(self, key):
         global comparisons_amount_for_element
-        first_index = hash(key) % len(self._data)
+        first_index = self._h(key)
         step = 1
         first_deleted_index = -1
         i = first_index
         while not self.__empty(i):
             comparisons_amount_for_element += 1
             if self.__deleted(i):
-                comparisons_amount_for_element += 1
                 if first_deleted_index == -1:
                     first_deleted_index = i
             elif self._key(self._data[i]) == key:
-                comparisons_amount_for_element += 1
                 return i
-            comparisons_amount_for_element += 1
             i = (i + step) % len(self._data)
-            comparisons_amount_for_element += 1
             if i == first_index:
                 return first_deleted_index
-        comparisons_amount_for_element += 1
         if first_deleted_index != -1:
             return first_deleted_index
         return i
@@ -140,7 +136,6 @@ class LinearDict(Dict):
         global comparisons_amount_for_element
         comparisons_amount_for_element = 0
         i = self.__scan_for(key)
-        comparisons_amount_for_element += 1
         if i == -1 or self.__empty(i) or self.__deleted(i):
             return None
         return self._data[i]
@@ -170,7 +165,7 @@ class LinearDict(Dict):
         for src_i in range(len(self._data)):
             if not self.__empty(src_i) and not self.__deleted(src_i):
                 key = self._key(self._data[src_i])
-                i = hash(key) % len(r)
+                i = self._h(key) % len(r)
                 step = 1
                 while r[i] != LinearDict.Special.EMPTY:
                     i = (i + step) % len(r)
@@ -186,29 +181,25 @@ chainDict = ChainDict()
 linearDict = LinearDict()
 
 chaindata = [[], []]
-lineardata= [[], []]
+lineardata = [[], []]
+rang = 15000
+data = random.sample(range(rang), rang)
 
-for i in range(10000):
-    chainDict.insert(i)
-    linearDict.insert(i)
-    if i % 100 == 0 and i != 0:
-        average = []
-        for j in range(100):
-            chainDict.find(random.randrange(0, i))
-            average.append(comparisons_amount_for_element)
-        chaindata[0].append(len(chainDict))
-        chaindata[1].append(int(sum(average)/len(average)))
-        average = []
-        for j in range(100):
-            linearDict.find(-1)
-            average.append(comparisons_amount_for_element)
-        lineardata[0].append(len(linearDict))
-        lineardata[1].append(int(sum(average)/len(average)))
+for i in range(rang):
+    chainDict.insert(data[i])
+    linearDict.insert(data[i])
+    chainDict.find(-1)
+    chaindata[0].append(len(chainDict))
+    chaindata[1].append(comparisons_amount_for_element)
+    linearDict.find(-3)
+    lineardata[0].append(len(linearDict))
+    lineardata[1].append(comparisons_amount_for_element)
 
 plt.plot(chaindata[0], chaindata[1], label="Lancuchowy")
 plt.plot(lineardata[0], lineardata[1], label="Liniowy")
 plt.xlabel = "Wielkosc slownika"
 plt.ylabel('Liczba porownan')
+plt.ylim(0, 500)
 plt.title('Porownanie lancuchowego i liniowego')
 plt.legend()
 plt.show()
