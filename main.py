@@ -48,10 +48,9 @@ class ChainDict(Dict):
 
     def __init__(self):
         super().__init__()
-        for i in range(16):
-            self._data.append([])
+        self._data = [[] for i in range(16)]
 
-    def __find_index(self, key):
+    def _find_index(self, key):
         global comparisons_amount_for_element
         h = hash(key) % len(self._data)
         for i in range(len(self._data[h])):
@@ -63,34 +62,32 @@ class ChainDict(Dict):
     def find(self, key):
         global comparisons_amount_for_element
         comparisons_amount_for_element = 0
-        h, i = self.__find_index(key)
+        h, i = self._find_index(key)
         if i == -1:
             return None
         return self._data[h][i]
 
     def insert(self, element):
-        h, i = self.__find_index(self._key(element))
+        h, i = self._find_index(self._key(element))
         if i == -1:
             self._data[h].append(element)
             self._size += 1
             if self._size > len(self._data) * self.MAX_PER_LIST:
-                self._data = self.__new_data(2 * len(self._data))
+                self._data = self._new_data(2 * len(self._data))
         else:
             self._data[h][i] = element
 
     def delete(self, key):
-        h, i = self.__find_index(key)
+        h, i = self._find_index(key)
         if i != -1:
             self._data[h][i] = self._data[h][len(self._data[h]) - 1]
             self._data[h].pop()
             self._size -= 1
             if (len(self._data)) > 1 and 4 * self._size < len(self._data) * self.MAX_PER_LIST:
-                self._data = self.__new_data(int(len(self._data) / 2))
+                self._data = self._new_data(int(len(self._data) / 2))
 
-    def __new_data(self, new_size):
-        r = []
-        for i in range(new_size):
-            r.append([])
+    def _new_data(self, new_size):
+        r = [[] for i in range(new_size)]
         for tab in self._data:
             for e in tab:
                 r[hash(self._key(e)) % len(r)].append(e)
@@ -98,29 +95,28 @@ class ChainDict(Dict):
 
 
 class LinearDict(Dict):
-    N = 99
-    D = 100
+    N = 999
+    D = 1000
 
     def __init__(self):
         super().__init__()
-        for i in range(16):
-            self._data.append(LinearDict.Special.EMPTY)
+        self._data = [LinearDict.Special.EMPTY] * 16
 
-    def __empty(self, i):
+    def _empty(self, i):
         return self._data[i] == LinearDict.Special.EMPTY
 
-    def __deleted(self, i):
+    def _deleted(self, i):
         return self._data[i] == LinearDict.Special.DELETED
 
-    def __scan_for(self, key):
+    def _scan_for(self, key):
         global comparisons_amount_for_element
         first_index = self._h(key)
         step = 1
         first_deleted_index = -1
         i = first_index
-        while not self.__empty(i):
+        while not self._empty(i):
             comparisons_amount_for_element += 1
-            if self.__deleted(i):
+            if self._deleted(i):
                 if first_deleted_index == -1:
                     first_deleted_index = i
             elif self._key(self._data[i]) == key:
@@ -135,35 +131,33 @@ class LinearDict(Dict):
     def find(self, key):
         global comparisons_amount_for_element
         comparisons_amount_for_element = 0
-        i = self.__scan_for(key)
-        if i == -1 or self.__empty(i) or self.__deleted(i):
+        i = self._scan_for(key)
+        if i == -1 or self._empty(i) or self._deleted(i):
             return None
         return self._data[i]
 
     def insert(self, element):
-        i = self.__scan_for(self._key(element))
-        if self.__empty(i) or self.__deleted(i):
+        i = self._scan_for(self._key(element))
+        if self._empty(i) or self._deleted(i):
             self._data[i] = element
             self._size += 1
             if self._size * self.D > len(self._data) * self.N:
-                self._data = self.__new_data(2 * len(self._data))
+                self._data = self._new_data(2 * len(self._data))
         else:
             self._data[i] = element
 
     def delete(self, key):
-        i = self.__scan_for(key)
-        if not self.__empty(i) and not self.__deleted(i):
+        i = self._scan_for(key)
+        if not self._empty(i) and not self._deleted(i):
             self._data[i] = LinearDict.Special.DELETED
             self._size -= 1
             if len(self._data) > 1 and self._size * 4 * self.D < len(self._data) * self.N:
-                self._data = self.__new_data(len(self._data) / 2)
+                self._data = self._new_data(len(self._data) / 2)
 
-    def __new_data(self, new_size):
-        r = []
-        for i in range(new_size):
-            r.append(LinearDict.Special.EMPTY)
+    def _new_data(self, new_size):
+        r = [LinearDict.Special.EMPTY] * new_size
         for src_i in range(len(self._data)):
-            if not self.__empty(src_i) and not self.__deleted(src_i):
+            if not self._empty(src_i) and not self._deleted(src_i):
                 key = self._key(self._data[src_i])
                 i = self._h(key) % len(r)
                 step = 1
@@ -182,7 +176,7 @@ linearDict = LinearDict()
 
 chaindata = [[], []]
 lineardata = [[], []]
-rang = 15000
+rang = 5000
 data = random.sample(range(rang), rang)
 
 for i in range(rang):
@@ -191,7 +185,7 @@ for i in range(rang):
     chainDict.find(-1)
     chaindata[0].append(len(chainDict))
     chaindata[1].append(comparisons_amount_for_element)
-    linearDict.find(-3)
+    linearDict.find(i)
     lineardata[0].append(len(linearDict))
     lineardata[1].append(comparisons_amount_for_element)
 
