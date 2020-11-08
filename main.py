@@ -95,7 +95,7 @@ class ChainDict(Dict):
 
 
 class LinearDict(Dict):
-    N = 7
+    N = 3
     D = 10
 
     def __init__(self):
@@ -114,6 +114,7 @@ class LinearDict(Dict):
         step = 1
         first_deleted_index = -1
         i = first_index
+        comparisons_amount_for_element += 1
         while not self._empty(i):
             comparisons_amount_for_element += 1
             if self._deleted(i):
@@ -176,7 +177,7 @@ linearDict = LinearDict()
 
 chaindata = [[], []]
 lineardata = [[], []]
-rang = 5000
+rang = 10000
 data = random.sample(range(rang), rang)
 
 for i, value in enumerate(data):
@@ -185,7 +186,7 @@ for i, value in enumerate(data):
     chainDict.find(-1)
     chaindata[0].append(len(chainDict))
     chaindata[1].append(comparisons_amount_for_element)
-    linearDict.find(i)
+    linearDict.find(random.randrange(0, rang))
     lineardata[0].append(len(linearDict))
     lineardata[1].append(comparisons_amount_for_element)
 
@@ -193,7 +194,6 @@ plt.plot(chaindata[0], chaindata[1], label="Lancuchowy")
 plt.plot(lineardata[0], lineardata[1], label="Liniowy")
 plt.xlabel = "Wielkosc slownika"
 plt.ylabel('Liczba porownan')
-plt.ylim(0, 500)
 plt.title('Porownanie lancuchowego i liniowego')
 plt.legend()
 plt.show()
